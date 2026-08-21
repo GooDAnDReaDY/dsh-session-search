@@ -1,0 +1,27 @@
+{
+  "name": "dsh-session-search",
+  "version": "0.1.3",
+  "description": "Тул session_search для Ди: обычная поиска по сессиям DSH через встроенный движок @deepseek-ai/dsh-session-query (SQLite FTS), без своей FTS и без загрузки всего в RAM.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "@deepseek-ai/dsh-tools": "*"
+  }
+}
