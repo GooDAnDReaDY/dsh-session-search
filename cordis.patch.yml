@@ -2,5 +2,5 @@
 # installed as a profile bundle (package.json declares dsh.bundle.patch).
 - insert:
     - id: dsh-session-search
-      name: dsh-session-search
+      name: '@goodandready-private/dsh-session-search'
       config: {}
