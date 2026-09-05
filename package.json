@@ -31,6 +31,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GooDAnDReaDY/dsh-session-search.git"
+    "url": "git+https://github.com/goodandready-private/dsh-session-search.git"
+  },
+  "homepage": "https://github.com/goodandready-private/dsh-session-search#readme",
+  "bugs": {
+    "url": "https://github.com/goodandready-private/dsh-session-search/issues"
   }
 }
