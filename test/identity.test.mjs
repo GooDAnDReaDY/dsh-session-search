@@ -6,12 +6,12 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-test('private package and host bundle identities match', async () => {
+test('public package and host bundle identities match', async () => {
   const pkg = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
   const patch = await readFile(resolve(root, 'cordis.patch.yml'), 'utf8');
-  assert.equal(pkg.name, '@goodandready-private/dsh-session-search');
-  assert.match(patch, /name: '@goodandready-private\/dsh-session-search'/);
-  assert.doesNotMatch(patch, /name: dsh-session-search/);
+  assert.equal(pkg.name, '@goodandready/dsh-session-search');
+  assert.match(patch, /name: '@goodandready\/dsh-session-search'/);
+  assert.doesNotMatch(patch, /name: '@goodandready-private\/dsh-session-search'/);
 });
 
 test('source has no machine-specific infrastructure references', async () => {

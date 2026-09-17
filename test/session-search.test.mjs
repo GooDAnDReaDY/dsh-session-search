@@ -36,15 +36,13 @@ test('apply registers session_search tool with proper schema and render', () => 
   plugin.apply(mockCtx, { maxResults: 15 });
   assert.ok(registeredTool, 'tool must be registered');
   assert.equal(registeredTool.name, 'session_search');
-  assert.ok(registeredTool.description.includes('сессиям DSH'));
-  
-  // defineTool compiles parameter spec into JSON Schema object
+  assert.ok(registeredTool.description.includes('historical DSH sessions'));
+
   const props = registeredTool.parameters?.properties ?? registeredTool.parameters;
   assert.equal(props.query.type, 'string');
   assert.equal(props.limit.type, 'integer');
   assert.ok(props.limit.description.includes('15'));
 
-  // Test output render
   const rendered = registeredTool.output.render({}, 'sample output');
   assert.deepEqual(rendered, [{ type: 'text', text: 'sample output' }]);
 
@@ -81,11 +79,9 @@ test('execute: successful search formatting and whitespace normalization', async
 
   assert.ok(result.includes('• DB Migration Guide [sess-1]'));
   assert.ok(result.includes('Line 1 with extra spaces and content'));
-  // Fallback to ID when title is empty
   assert.ok(result.includes('• sess-2 [sess-2]'));
   assert.ok(result.includes('Second session snippet without title'));
-  // No next cursor indicator when nextCursor is absent
-  assert.ok(!result.includes('(есть ещё результаты'));
+  assert.ok(!result.includes('(more results available'));
 });
 
 test('execute: pagination indicator when nextCursor is present', async () => {
@@ -110,7 +106,7 @@ test('execute: pagination indicator when nextCursor is present', async () => {
   plugin.apply(mockCtx);
   const result = await tool.execute({ query: 'test' });
   assert.ok(result.includes('• Paged session [sess-page]'));
-  assert.ok(result.includes('(есть ещё результаты — уточни запрос)'));
+  assert.ok(result.includes('(more results available — refine your query)'));
 });
 
 test('execute: limit parameter clamping (1..100) and defaults', async () => {
@@ -158,12 +154,11 @@ test('execute: empty results notice', async () => {
 
   plugin.apply(mockCtx);
   const result = await tool.execute({ query: 'nonexistent keyword' });
-  assert.equal(result, 'session_search: совпадений не найдено.');
+  assert.equal(result, 'session_search: no matches found.');
 
-  // If page.items is undefined
   mockCtx.sessionQuery.searchSessions = async () => ({});
   const resultUndefined = await tool.execute({ query: 'nonexistent keyword' });
-  assert.equal(resultUndefined, 'session_search: совпадений не найдено.');
+  assert.equal(resultUndefined, 'session_search: no matches found.');
 });
 
 test('execute: error handling from sessionQuery engine', async () => {
@@ -179,14 +174,13 @@ test('execute: error handling from sessionQuery engine', async () => {
 
   plugin.apply(mockCtx);
   const result = await tool.execute({ query: 'crash test' });
-  assert.equal(result, 'session_search: ошибка: SQLite FTS table corrupted');
+  assert.equal(result, 'session_search: error: SQLite FTS table corrupted');
 
-  // Non-Error exception
   mockCtx.sessionQuery.searchSessions = async () => {
     throw 'raw string error';
   };
   const resultRaw = await tool.execute({ query: 'raw error' });
-  assert.equal(resultRaw, 'session_search: ошибка: raw string error');
+  assert.equal(resultRaw, 'session_search: error: raw string error');
 });
 
 test('execute: AbortSignal forwarding', async () => {
@@ -207,7 +201,6 @@ test('execute: AbortSignal forwarding', async () => {
   await tool.execute({ query: 'abortable' }, { signal: controller.signal });
   assert.equal(receivedSignal, controller.signal);
 
-  // Without signal
   await tool.execute({ query: 'no signal' }, {});
   assert.equal(receivedSignal, undefined);
 });

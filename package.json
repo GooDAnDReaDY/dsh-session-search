@@ -1,5 +1,5 @@
 {
-  "name": "@goodandready-private/dsh-session-search",
+  "name": "@goodandready/dsh-session-search",
   "version": "0.1.4",
   "description": "DeepSeek Harness agent tool (session_search) for full-text search across historical sessions backed by core SQLite FTS5 engine without memory overhead.",
   "type": "module",
@@ -14,6 +14,7 @@
     "cordis.patch.yml",
     "README.md",
     "README.ru.md",
+    "README.zh.md",
     "LICENSE",
     "test"
   ],
@@ -27,7 +28,7 @@
   },
   "license": "MIT",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
@@ -36,10 +37,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/goodandready-private/dsh-session-search.git"
+    "url": "git+https://github.com/goodandready/dsh-session-search.git"
   },
-  "homepage": "https://github.com/goodandready-private/dsh-session-search#readme",
+  "homepage": "https://github.com/goodandready/dsh-session-search#readme",
   "bugs": {
-    "url": "https://github.com/goodandready-private/dsh-session-search/issues"
+    "url": "https://github.com/goodandready/dsh-session-search/issues"
   }
 }
