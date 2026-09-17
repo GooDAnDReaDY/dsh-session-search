@@ -42,5 +42,14 @@
   "homepage": "https://github.com/goodandready/dsh-session-search#readme",
   "bugs": {
     "url": "https://github.com/goodandready/dsh-session-search/issues"
-  }
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "session-search",
+    "sqlite",
+    "fts5",
+    "agent-tool"
+  ]
 }
