@@ -1,15 +1,14 @@
-# 🔍 @goodandready-private/dsh-session-search
+# 🔍 @goodandready/dsh-session-search
 
 <div align="center">
 
 <h3>Инструмент полнотекстового поиска по истории сессий для автономных агентов DeepSeek Harness</h3>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/версия-0.1.4-6366f1.svg?style=for-the-badge&labelColor=1e1b4b" alt="версия">
-  <img src="https://img.shields.io/badge/Лицензия-MIT-10b981.svg?style=for-the-badge&labelColor=064e3b" alt="лицензия">
-  <img src="https://img.shields.io/badge/DSH-Плагин-8b5cf6.svg?style=for-the-badge&labelColor=2e1065" alt="DSH Плагин">
-  <img src="https://img.shields.io/badge/Node-20%2B-f59e0b.svg?style=for-the-badge&labelColor=451a03" alt="Node version">
-  <img src="https://img.shields.io/badge/Маршрут-Приватный-e11d48.svg?style=for-the-badge&labelColor=4c0519" alt="Приватный маршрут">
+  <a href="https://www.npmjs.com/package/@goodandready/dsh-session-search"><img src="https://img.shields.io/npm/v/@goodandready/dsh-session-search.svg?style=for-the-badge&color=6366f1&labelColor=1e1b4b" alt="версия npm"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Лицензия-MIT-10b981.svg?style=for-the-badge&color=10b981&labelColor=064e3b" alt="лицензия"></a>
+  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/DSH-Плагин-8b5cf6.svg?style=for-the-badge&labelColor=2e1065" alt="DSH Плагин"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node-20%2B-f59e0b.svg?style=for-the-badge&labelColor=451a03" alt="Node version"></a>
 </p>
 
 <!-- Showcase Button -->
@@ -19,6 +18,7 @@
 
 <p align="center">
   <a href="README.md"><b>🇬🇧 English</b></a> •
+  <a href="README.zh.md"><b>🇨🇳 中文说明</b></a> •
   <b>🇷🇺 Русский</b>
 </p>
 
@@ -30,7 +30,7 @@
 
 В штатной поставке **DeepSeek Harness** история прошлых диалогов индексируется полнотекстовым движком ядра (`@deepseek-ai/dsh-session-query-sqlite`), однако этот поиск доступен исключительно человеку через поисковую строку в боковой панели. Автономная модель (агент Ди / Dee) **не имеет инструмента** для самостоятельного обращения к архивам бесед.
 
-Плагин `@goodandready-private/dsh-session-search` устраняет эту асимметрию: он регистрирует инструмент модели `session_search`, позволяя агенту самостоятельно вспоминать прошлые решения, извлечённые уроки, конфиги и контекст старых диалогов без необходимости вычитывать громоздкие архивы `.jsonl.zstd` в память.
+Плагин `@goodandready/dsh-session-search` устраняет эту асимметрию: он регистрирует инструмент модели `session_search`, позволяя агенту самостоятельно вспоминать прошлые решения, извлечённые уроки, конфиги и контекст старых диалогов без необходимости вычитывать громоздкие архивы `.jsonl.zstd` в память.
 
 ---
 
@@ -48,7 +48,7 @@ sequenceDiagram
     participant DB as Индекс SQLite FTS5 (search_state / persisted_docs)
 
     User->>Agent: "Помнишь, как мы настраивали SSL в Nginx в прошлый раз?"
-    Agent->>Tool: execute({ query: "настройка Nginx SSL", limit: 5 })
+    Agent->>Tool: execute({ query: "Nginx SSL configuration", limit: 5 })
     Tool->>Core: searchSessions({ query, limit }, { signal })
     Core->>DB: Полнотекстовый MATCH запрос к FTS5
     DB-->>Core: Список найденных сессий и текстовые сниппеты
@@ -68,21 +68,26 @@ sequenceDiagram
 | **Поисковый движок** | SQLite FTS5 (`ctx.sessionQuery`) | Напрямую использует штатный движок ядра |
 | **Расход оперативной памяти** | Минимальный | Нулевой дополнительный оверхед (делегирование ядру) |
 | **Формат сниппетов** | HTML-рендеринг в интерфейсе | Нормализованный текст для контекста LLM |
-| **Индикация пагинации** | UI скролл / курсор | Подсказка модели: `(есть ещё результаты — уточни запрос)` |
+| **Индикация пагинации** | UI скролл / курсор | Подсказка модели: `(more results available — refine your query)` |
 | **Прерывание операции** | AbortSignal в API | Проброс через `execCtx.signal` |
 
 ---
 
 ## Установка
 
-Пакет публикуется в приватный реестр GitHub Packages:
+Установка через CLI `dsh` для профиля web:
 
 ```bash
-# Установка в профиль web
-pnpm add @goodandready-private/dsh-session-search
+dsh plugin --profile web add @goodandready/dsh-session-search
 ```
 
-Перезапустите DeepSeek Harness для применения бандл-патча (`cordis.patch.yml`).
+Либо с помощью `pnpm`:
+
+```bash
+pnpm add @goodandready/dsh-session-search
+```
+
+Перезапустите профиль web DeepSeek Harness для применения бандл-патча (`cordis.patch.yml`).
 
 ---
 
@@ -116,27 +121,18 @@ plugins:
   Текстовый сниппет с найденным фрагментом сообщения...
 • Вторая сессия [session-id-67890]
   Ещё один фрагмент обсуждения...
-(есть ещё результаты — уточни запрос)
+(more results available — refine your query)
 ```
 
 Если ничего не найдено:
 ```text
-session_search: совпадений не найдено.
+session_search: no matches found.
 ```
 
 При внутренней ошибке движка:
 ```text
-session_search: ошибка: <текст ошибки>
+session_search: error: <текст ошибки>
 ```
-
----
-
-## Языковые решения и локализация (ADR-001)
-
-Как зафиксировано в `docs/design/DESIGN.md`, кириллические строки инструмента `session_search` (описание тула, аргументов и служебных сообщений) сохранены на русском языке осознанно:
-1. Инструмент спроектирован для русскоязычного агента Ди, чей основной рабочий контекст и системные промпты ведутся на русском языке.
-2. Так как плагин является **host-only** (без пользовательского веб-интерфейса), клиентский реестр локализации `ctx.locale.register` не задействуется.
-3. Пакет системной локализации `@goodandready/dsh-russian-lang` не модифицирует схемы серверных инструментов.
 
 ---
 
