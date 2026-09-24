@@ -11,18 +11,22 @@
 - **Web/UI:** UI отсутствует на текущем этапе — плагин полностью **host-only**, клиентских компонентов (React/JSX) и CSS нет.
 - **DSH UI / settings / slots:** Слоты интерфейса не регистрируются. Конфигурация плагина осуществляется через схему `Config` Cordis:
   - `maxResults` (number, default: 20): Базовый лимит возвращаемых сессий при поиске.
+  - `snippetLength` (number, default: 200): Максимальная длина текстового фрагмента вокруг совпадения.
+  - `timeoutMs` (number, default: 30000): Защитный таймаут ожидания ответа движка сессий (мс).
 - **API / Model Tools:**
   - Зарегистрированный инструмент агента: `session_search`.
+  - Свойства инструмента: `timeoutMs: 30000`, `isConcurrencySafe: () => true`.
   - Язык интерфейса инструмента: канонический английский (согласно стандарту публичных плагинов DSH).
   - Входные параметры:
-    - `query` (string, required): Поисковые термы/запрос.
+    - `query` (string, required): Поисковые термы/запрос (обязательная непустая строка).
     - `limit` (integer, optional): Максимум результатов (валидируется и зажимается в диапазон `1..100`, по умолчанию `maxResults`).
   - Формат вывода модели:
     - Успешный результат: список строк вида:
       ```text
-      • <Title> [<SessionId>]
+      • <Title> [<SessionId>] (<YYYY-MM-DD>)
         <Snippet совпадения>
       ```
+      (если сниппет пустой, перенос строки не добавляется).
       При наличии курсора следующей страницы добавляется строка:
       ```text
       (more results available — refine your query)
@@ -31,7 +35,7 @@
       ```text
       session_search: no matches found.
       ```
-    - Ошибка исполнения движка:
+    - Ошибка валидации или исполнения движка:
       ```text
       session_search: error: <текст ошибки>
       ```
@@ -45,6 +49,7 @@
 ## Architecture & Integration
 
 - **Cordis Service Injection:** Плагин объявляет зависимости `export const inject = ['tools', 'sessionQuery']`.
+- **Жизненный цикл:** Регистрация инструмента завернута в `ctx.effect(() => ctx.tools.register(...))` для гарантированной отмены эффектов при выгрузке/перезапуске плагина.
 - **Имя и идентичность:**
   - `package.json`: `@goodandready/dsh-session-search`;
   - `cordis.patch.yml`: регистрация в бандле под именем `@goodandready/dsh-session-search`;
@@ -67,3 +72,14 @@
   2. Строки `session_search` переведены на чистый английский язык (`session_search: no matches found.`, `session_search: error: ...`, `(more results available — refine your query)`).
   3. Плагин host-only, клиентских UI-слотов нет, поэтому регистрация клиентской локали `locale.register` не требуется.
   4. Документация оформлена на трёх языках: английский (`README.md`), китайский (`README.zh.md`) и русский (`README.ru.md`).
+
+### ADR-003: Харденинг инструмента session_search (Lifecycle, валидация, дата и таймауты)
+- **Дата:** 2026-09-24
+- **Статус:** Accepted (Реализация задач аудита #11, #12, #13)
+- **Контекст:** По результатам глубокого аудита кодовой базы выявлены риски: утечка эффекта при hot-reload без `ctx.effect`, зависание без `timeoutMs`, поиск слова "undefined" при пустом вводе и отсутствие даты сессий в результатах.
+- **Решение:**
+  1. Регистрация `ctx.tools.register` обёрнута в `ctx.effect(() => ...)` с возвратом диспозера для чистого жизненного цикла Cordis.
+  2. Объявлен `timeoutMs: 30000` (настраивается через `Config.timeoutMs`) и флаг `isConcurrencySafe: () => true`.
+  3. Введена строгая валидация `args.query`: пустые строки, пробелы и значения без текста пресекаются до вызова FTS движка с сообщением `session_search: error: query must be a non-empty string.`.
+  4. Формат вывода обогащён компактной датой сессии: `• ${title} [${id}] (${dateStr})` на основе `header.updated_at` / `header.created_at` / `bestMatch.time`.
+  5. Сниппет форматируется аккуратно (без висячих `\n  ` при пустом сниппете) и обрезается до настраиваемого `snippetLength` (по умолчанию 200).
