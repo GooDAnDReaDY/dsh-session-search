@@ -124,6 +124,8 @@ plugins:
 | `snippetLength` | `number` | `200` | Maximum character length of snippet around best match. |
 | `timeoutMs` | `number` | `30000` | Search execution timeout in milliseconds. |
 
+Options can also be configured interactively via the DSH Web UI under **Settings → Plugins → Session Search**.
+
 ---
 
 ## Tool Specification: `session_search`

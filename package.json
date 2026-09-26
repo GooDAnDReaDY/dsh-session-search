@@ -1,11 +1,12 @@
 {
   "name": "@goodandready/dsh-session-search",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "DeepSeek Harness agent tool (session_search) for full-text search across historical sessions backed by core SQLite FTS5 engine without memory overhead.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
+    "./client": "./lib/client.js",
     "./package.json": "./package.json",
     "./cordis.patch.yml": "./cordis.patch.yml"
   },
@@ -15,8 +16,7 @@
     "README.md",
     "README.ru.md",
     "README.zh.md",
-    "LICENSE",
-    "test"
+    "LICENSE"
   ],
   "scripts": {
     "test": "node --test test/*.test.mjs"
@@ -24,6 +24,14 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
     }
   },
   "license": "MIT",
