@@ -124,6 +124,8 @@ plugins:
 | `snippetLength` | `number` | `200` | 匹配词周围上下文摘要的最大字符长度。 |
 | `timeoutMs` | `number` | `30000` | 检索执行超时时间（毫秒）。 |
 
+以上配置项亦可在 DSH Web UI 的 **设置 → 插件 → 会话全文检索** 面板中直接进行可视化配置。
+
 ---
 
 ## 工具规范：`session_search`
