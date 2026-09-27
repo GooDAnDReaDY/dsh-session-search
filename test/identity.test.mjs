@@ -43,3 +43,7 @@ test('source has no machine-specific infrastructure references', async () => {
   assert.doesNotMatch(source + '\n' + client + '\n' + readme, /\/home\/|192\.168\.|codex_migrate|MiniAI|MiniPC|vadim@/);
 });
 
+test('client module declares cordis inject for slots and locale', async () => {
+  const clientSrc = await readFile(resolve(root, 'lib/client.js'), 'utf8');
+  assert.match(clientSrc, /exports\.inject\s*=\s*\[[^\]]*'slots'[^\]]*'locale'[^\]]*\]/);
+});
