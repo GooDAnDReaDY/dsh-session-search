@@ -22,6 +22,7 @@ test('package files allowlist includes only product files without test directory
   assert.ok(pkg.files.includes('cordis.patch.yml'), 'cordis.patch.yml must be in files');
   assert.ok(pkg.files.includes('README.md'), 'README.md must be in files');
   assert.ok(pkg.files.includes('LICENSE'), 'LICENSE must be in files');
+  assert.ok(pkg.files.includes('CHANGELOG.md'), 'CHANGELOG.md must be in files');
 });
 
 test('client module matches package identity and provides settings slots', async () => {
@@ -43,7 +44,21 @@ test('source has no machine-specific infrastructure references', async () => {
   assert.doesNotMatch(source + '\n' + client + '\n' + readme, /\/home\/|192\.168\.|codex_migrate|MiniAI|MiniPC|vadim@/);
 });
 
-test('client module declares cordis inject for slots and locale', async () => {
+test('client module declares cordis inject for slots, locale, and configForms', async () => {
   const clientSrc = await readFile(resolve(root, 'lib/client.js'), 'utf8');
-  assert.match(clientSrc, /exports\.inject\s*=\s*\[[^\]]*'slots'[^\]]*'locale'[^\]]*\]/);
+  assert.match(clientSrc, /exports\.inject\s*=\s*\[[^\]]*'slots'[^\]]*'locale'[^\]]*'configForms'[^\]]*\]/);
+});
+
+test('client module uses short ROW_ID for data-dsh-plugin and settings namespace', async () => {
+  const clientSrc = await readFile(resolve(root, 'lib/client.js'), 'utf8');
+  assert.match(clientSrc, /el\.setAttribute\('data-dsh-plugin',\s*ROW_ID\)/);
+  assert.match(clientSrc, /const NS = ROW_ID;/);
+});
+
+test('host module uses safe settings namespace matching regex /^[a-z][a-z0-9-]*$/', async () => {
+  const indexSrc = await readFile(resolve(root, 'lib/index.js'), 'utf8');
+  const nameMatch = indexSrc.match(/export const name = '([^']+)'/);
+  assert.ok(nameMatch, 'name export must exist');
+  assert.match(nameMatch[1], /^[a-z][a-z0-9-]*$/);
+  assert.match(indexSrc, /loader\/volatile-update/);
 });
