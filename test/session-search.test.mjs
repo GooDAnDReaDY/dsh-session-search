@@ -279,3 +279,108 @@ test('execute: AbortSignal forwarding', async () => {
   await tool.execute({ query: 'no signal' }, {});
   assert.equal(receivedSignal, undefined);
 });
+
+test('plainConfig unwraps VolatileRef boxes, functions, arrays and nested objects', () => {
+  const volatileBox = {
+    get() { return 42; },
+  };
+  assert.equal(plugin.isVolatileRef(volatileBox), true);
+  assert.equal(plugin.isVolatileRef(null), false);
+  assert.equal(plugin.isVolatileRef({}), false);
+
+  const complexConfig = {
+    num: () => 10,
+    box: volatileBox,
+    list: [() => 'a', { nestedBox: { get: () => 'b' } }],
+  };
+  const unwrapped = plugin.plainConfig(complexConfig);
+  assert.deepEqual(unwrapped, {
+    num: 10,
+    box: 42,
+    list: ['a', { nestedBox: 'b' }],
+  });
+});
+
+test('settings integration: settings.configure, describe().find(), and reactive document-updated event', async () => {
+  let configureArgs = null;
+  let configureDisposed = false;
+  let docUpdatedDisposed = false;
+  let docUpdatedHandler = null;
+  let tool = null;
+  let sctxEffectCb = null;
+  let currentSettingsValue = { maxResults: 42, snippetLength: 350, timeoutMs: 15_000 };
+
+  const mockSettings = {
+    configure(opts, fiber) {
+      configureArgs = { opts, fiber };
+      return () => { configureDisposed = true; };
+    },
+    describe() {
+      return [
+        { ns: 'other-plugin', value: {} },
+        { ns: 'dsh-session-search', value: currentSettingsValue },
+      ];
+    },
+  };
+
+  const mockSctx = {
+    settings: mockSettings,
+    on(event, handler) {
+      if (event === 'settings/document-updated') {
+        docUpdatedHandler = handler;
+        return () => { docUpdatedDisposed = true; };
+      }
+    },
+    effect(fn) {
+      sctxEffectCb = fn();
+    },
+  };
+
+  const mockCtx = {
+    fiber: { config: { maxResults: 10 } },
+    effect(fn) { return fn(); },
+    inject(deps, cb) {
+      if (deps.includes('settings')) {
+        cb(mockSctx);
+      }
+    },
+    tools: {
+      register(def) {
+        tool = def;
+        return () => {};
+      },
+    },
+    sessionQuery: {
+      async searchSessions(req) {
+        return { items: [{ header: { id: 's1', title: 'T1' }, bestMatch: { snippet: 'a'.repeat(500) } }] };
+      },
+    },
+  };
+
+  plugin.apply(mockCtx);
+
+  // 1. Verify configure called
+  assert.ok(configureArgs);
+  assert.deepEqual(configureArgs.opts, { auto: false });
+  assert.equal(configureArgs.fiber, mockCtx.fiber);
+
+  // 2. Verify settings read from describe().find()
+  let result = await tool.execute({ query: 'test' });
+  // snippetLength was 350 from currentSettingsValue
+  assert.ok(result.includes('a'.repeat(350)));
+  assert.ok(!result.includes('a'.repeat(351)));
+
+  // 3. Update settings and fire settings/document-updated
+  currentSettingsValue = { maxResults: 12, snippetLength: 100, timeoutMs: 10_000 };
+  docUpdatedHandler('dsh-session-search');
+
+  result = await tool.execute({ query: 'test' });
+  assert.ok(result.includes('a'.repeat(100)));
+  assert.ok(!result.includes('a'.repeat(101)));
+
+  // 4. Verify effect cleanup
+  assert.equal(typeof sctxEffectCb, 'function');
+  sctxEffectCb();
+  assert.ok(configureDisposed, 'configure disposer must be called on effect cleanup');
+  assert.ok(docUpdatedDisposed, 'docUpdated disposer must be called on effect cleanup');
+});
