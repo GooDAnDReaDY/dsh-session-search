@@ -61,4 +61,7 @@ test('host module uses safe settings namespace matching regex /^[a-z][a-z0-9-]*$
   assert.ok(nameMatch, 'name export must exist');
   assert.match(nameMatch[1], /^[a-z][a-z0-9-]*$/);
   assert.match(indexSrc, /loader\/volatile-update/);
+  assert.match(indexSrc, /settings\.configure/);
+  assert.match(indexSrc, /settings\.describe/);
+  assert.doesNotMatch(indexSrc, /settings\.register/, 'dead settings.register branch must be eliminated (#29)');
 });

@@ -119,3 +119,17 @@
   3. В `lib/client.js` объявлен `exports.inject = ['slots', 'locale', 'configForms']`.
   4. В `ensureStyles()` атрибут `data-dsh-plugin` переведён на `ROW_ID` (`dsh-session-search`).
   5. В корень репозитория добавлен `CHANGELOG.md` с историей всех версий и включён в `package.json.files`.
+
+### ADR-007: Модернизация хост-сервиса настроек под DSH 0.2.0+ (Issue #29)
+- **Дата:** 2026-10-15
+- **Статус:** Accepted (Реализация задачи #29)
+- **Контекст:** В ходе аудита кодовой базы выявлено, что ветка вызова `sctx.settings.register` в `lib/index.js` является мёртвой в рантайме DSH `0.2.0-rc.2+`, так как метод `register` в сервисе `settings` ядра отсутствует. Вызов перехватывался `try / catch`, из-за чего чтение конфигурации всегда откатывалось на исходный снимок `ctx.fiber?.config ?? config`.
+- **Решение:**
+  1. Вызов `sctx.settings.register` полностью удалён.
+  2. Внедрена каноническая связка DSH 0.2.0+:
+     - `sctx.settings.configure({ auto: false }, ctx.fiber)` для регистрации формы настроек плагина;
+     - `sctx.settings.describe().find(row => row.ns === name)` для динамического считывания живых настроек;
+     - `plainConfig` и `resolveConfig` для рекурсивного разворачивания боксов `VolatileRef`, функций и вложенных структур;
+     - реактивная подписка на события `settings/document-updated`, `loader/volatile-update` и `internal/update`;
+     - регистрация функций очистки диспозеров в `sctx.effect`.
+  3. В тестовый набор добавлены модульные проверки работы `plainConfig`, контракта `configure`/`describe` и отсутствия устаревшего `settings.register`.

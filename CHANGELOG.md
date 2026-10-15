@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.9] - 2026-10-15
+
+### Fixed
+- **Host Settings Modernization (DSH 0.2.0+):** Replaced dead `settings.register` branch in `lib/index.js` with DSH 0.2.0+ standard `settings.configure({ auto: false }, ctx.fiber)` and `settings.describe().find((row) => row.ns === name)` for live configuration lookup (#29).
+- **Volatile Reference Unwrapping:** Added `plainConfig` and `resolveConfig` helpers to reliably unwrap `VolatileRef` boxes, functions, and nested structures mutated by the DSH loader (#29).
+- **Reactive Settings Events:** Subscribed to `settings/document-updated` alongside `loader/volatile-update` and `internal/update` with clean lifecycle disposal via `sctx.effect` (#29).
+
+### Added
+- **Design Contract:** Added ADR-007 to `docs/design/DESIGN.md`.
+- **Unit Tests:** Added regression tests in `test/session-search.test.mjs` and `test/identity.test.mjs` verifying `plainConfig`, `settings.configure`, `settings.describe`, and elimination of `settings.register`.
+
 ## [0.1.8] - 2026-10-09
 
 ### Fixed
